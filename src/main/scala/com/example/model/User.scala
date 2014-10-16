@@ -3,4 +3,4 @@ package com.example.model
 /**
  * Пользователь
  */
-case class User(token: String)
+case class User(id: Option[Long] = None, token: String)
