@@ -4,28 +4,12 @@ import akka.actor.Actor
 import spray.routing._
 import spray.http._
 import MediaTypes._
+import com.example.controllers.UserRestController
 
-class ApiActor extends Actor with Api {
+class Api extends HttpService with Actor{
+  val routes = {
+    new UserRestController().route
+  }
   def actorRefFactory = context
-  def receive = runRoute(myRoute)
-}
-
-
-// this trait defines our service behavior independently from the service actor
-trait Api extends HttpService {
-
-  val myRoute =
-    path("") {
-      get {
-        respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
-          complete {
-            <html>
-              <body>
-                <h1>Say hello to <i>spray-routing</i> on <i>spray-can</i>!</h1>
-              </body>
-            </html>
-          }
-        }
-      }
-    }
+  def receive = runRoute(routes)
 }

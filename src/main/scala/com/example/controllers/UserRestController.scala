@@ -1,22 +1,17 @@
 package com.example.controllers
 
-import akka.actor.Actor
-import spray.routing.HttpService
+import akka.actor.{ActorRefFactory, Actor}
+import spray.routing.{Directives, HttpService}
 import spray.http.MediaTypes._
 
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
  */
-class UserRestControllerActor extends Actor with UserRestController{
-  def actorRefFactory = context
-  def receive = runRoute(myRoute)
-}
-
-trait UserRestController extends HttpService{
-  val myRoute =
-    path("") {
+class UserRestController extends Directives{
+  val route =
+    path("register") {
       get {
-        respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
+        respondWithMediaType(`text/html`) {
           complete {
             <html>
               <body>
