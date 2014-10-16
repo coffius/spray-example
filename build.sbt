@@ -16,9 +16,10 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
     "com.typesafe.akka"   %%  "akka-testkit"  % akkaV   % "test",
     "org.specs2"          %%  "specs2-core"   % "2.3.7" % "test",
-    "com.typesafe.slick"  %% "slick"          % "2.1.0",
-    "joda-time"           %  "joda-time"      % "2.3",
-    "org.postgresql"      %   "postgresql"    % "9.3-1101-jdbc41"
+    "com.typesafe.slick"  %%  "slick"         % "2.1.0",
+    "joda-time"           %   "joda-time"     % "2.3",
+    "org.postgresql"      %   "postgresql"    % "9.3-1101-jdbc41",
+    "io.spray"            %%  "spray-json"    % "1.3.0"
   )
 }
 
