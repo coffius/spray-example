@@ -13,4 +13,3 @@ class Users(tag: Tag) extends Table[User](tag, "users") {
   // Every table needs a * projection with the same type as the table's type parameter
   def * = (id.?, token) <> (User.tupled, User.unapply)
 }
-
