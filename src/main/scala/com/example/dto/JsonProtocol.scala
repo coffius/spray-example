@@ -10,5 +10,5 @@ object JsonProtocol extends DefaultJsonProtocol{
   implicit val TokenResponseFormat = jsonFormat1(TokenResponse)
   implicit val CreateLinkRequestFormat = jsonFormat4(CreateLinkRequest)
   implicit val CreateLinkResponseFormat = jsonFormat2(CreateLinkResponse)
-
+  implicit val PostLinkDataRequestFormat = jsonFormat2(PostLinkDataRequest)
 }

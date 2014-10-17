@@ -55,7 +55,26 @@ class LinkRestController extends Directives with WithDb{
           }
         }
       }
+    } ~
+  pathPrefix("link" / Segment){ code =>
+    post {
+      entity(as[PostLinkDataRequest]){_ =>
+        val findLinkQuery = for{
+          link <- links if link.code === code
+        } yield link
+
+        val findedLink = db.withSession{ implicit session =>
+          findLinkQuery.firstOption
+        }
+
+        findedLink.fold {
+          respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+        }{ link =>
+          complete { link.url }
+        }
+      }
     }
+  }
 
   private def generateCode = UUID.randomUUID().toString
 }
