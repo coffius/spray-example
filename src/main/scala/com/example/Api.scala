@@ -6,12 +6,14 @@ import spray.http._
 import MediaTypes._
 import com.example.controllers.{LinkRestController, UserRestController}
 
+class ApiActor extends Actor with Api{
+  def actorRefFactory = context
+  def receive = runRoute(routes)
+}
 
-class Api extends HttpService with Actor{
+trait Api extends HttpService{
   val routes = {
     new UserRestController().route ~
     new LinkRestController().route
   }
-  def actorRefFactory = context
-  def receive = runRoute(routes)
 }
