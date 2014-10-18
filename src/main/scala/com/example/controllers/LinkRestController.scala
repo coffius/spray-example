@@ -6,15 +6,14 @@ import spray.httpx.SprayJsonSupport._
 import com.example.dto.JsonProtocol._
 import com.example.dto._
 import scala.slick.lifted.TableQuery
-import com.example.dao.{Links, Users}
+import com.example.dao.{Clicks, Links, Users}
 import spray.http.StatusCode
-import com.example.model.Link
+import com.example.model.{Click, Link}
 import java.util.UUID
 import spray.http.MediaTypes._
-import com.example.model.Link
 import com.example.dto.CreateLinkRequest
 import com.example.dto.CreateLinkResponse
-import com.example.model.Link
+import org.joda.time.DateTime
 
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
@@ -22,6 +21,7 @@ import com.example.model.Link
 class LinkRestController extends Directives with WithDb{
   private val users = TableQuery[Users]
   private val links = TableQuery[Links]
+  private val clicks = TableQuery[Clicks]
 
   val route =
     path("link") {
@@ -58,16 +58,23 @@ class LinkRestController extends Directives with WithDb{
     } ~
   pathPrefix("link" / Segment){ code =>
     post {
-      entity(as[PostLinkDataRequest]){_ =>
+      entity(as[PostLinkDataRequest]){request =>
         val findLinkQuery = for{
           link <- links if link.code === code
         } yield link
 
-        val findedLink = db.withSession{ implicit session =>
+        val foundLink = db.withSession{ implicit session =>
+          clicks += Click(
+            date = DateTime.now(),
+            referer = request.referer,
+            remoteIp = request.remoteIp
+          )
           findLinkQuery.firstOption
         }
 
-        findedLink.fold {
+
+
+        foundLink.fold {
           respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
         }{ link =>
           complete { link.url }
