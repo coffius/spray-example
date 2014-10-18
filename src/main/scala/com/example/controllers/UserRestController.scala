@@ -43,9 +43,7 @@ class UserRestController(private val userRepo: UserRepo = new UserRepo(),
               }
 
               respondWithMediaType(`application/json`) {
-                complete {
-                  TokenResponse(userToken)
-                }
+                complete(TokenResponse(userToken))
               }
             }
           }

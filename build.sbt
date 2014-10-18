@@ -21,7 +21,8 @@ libraryDependencies ++= {
     "org.postgresql"        %   "postgresql"        % "9.3-1101-jdbc41",
     "io.spray"              %%  "spray-json"        % "1.3.0",
     "org.joda"              %   "joda-convert"      % "1.6",
-    "com.github.tototoshi"  %% "slick-joda-mapper"  % "1.2.0"
+    "com.github.tototoshi"  %%  "slick-joda-mapper" % "1.2.0",
+    "org.mockito"           %   "mockito-all"       % "1.9.5"
   )
 }
 
