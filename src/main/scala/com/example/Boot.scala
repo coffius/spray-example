@@ -6,7 +6,6 @@ import spray.can.Http
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.example.Api
 
 object Boot extends App {
 
