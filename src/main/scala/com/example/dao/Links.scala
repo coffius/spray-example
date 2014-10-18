@@ -6,7 +6,7 @@ import com.example.model.Link
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
  */
-class Links(tag: Tag) extends Table[Link](tag, "links") {
+class Links(tag: Tag) extends Table[Link](tag, "links") with EntityDao{
   def id: Column[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def ownerId: Column[Long] = column[Long]("owner_id")
   def folderId: Column[Option[Long]] = column[Option[Long]]("folder_id")

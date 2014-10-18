@@ -7,4 +7,4 @@ case class Link(id: Option[Long] = None,
                 ownerId: Long,
                 folderId: Option[Long],
                 url: String,
-                code: String)
+                code: String) extends Entity

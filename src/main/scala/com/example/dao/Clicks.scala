@@ -8,7 +8,7 @@ import org.joda.time.DateTime
 /**
 * @author coffius@gmail.com (Aleksei Shamenev)
 */
-class Clicks (tag: Tag) extends Table[Click](tag, "clicks") {
+class Clicks (tag: Tag) extends Table[Click](tag, "clicks") with EntityDao{
   def id: Column[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def date: Column[DateTime] = column[DateTime]("date")
   def referer: Column[String] = column[String]("referer")
