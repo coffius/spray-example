@@ -9,7 +9,7 @@ import com.example.dto.JsonProtocol._
 import com.example.dto.LinkListDataResponse
 import com.example.dto.LinkData
 import com.example.dto.FolderData
-import com.example.dto.LinkListDataRequest
+import com.example.dto.PageRequest
 
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
@@ -27,7 +27,7 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
           'token,
           'offset.as[Option[Int]],
           'limit.as[Option[Int]]
-        ).as(LinkListDataRequest){ request: LinkListDataRequest =>
+        ).as(PageRequest){ request: PageRequest =>
           val result = db.withSession{ implicit session =>
             for{
               user <- userRepo.findByToken(request.token)

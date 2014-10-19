@@ -125,7 +125,7 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
         'token,
         'offset.as[Option[Int]],
         'limit.as[Option[Int]]
-      ).as(LinkListDataRequest){ request: LinkListDataRequest =>
+      ).as(PageRequest){ request: PageRequest =>
         val result = db.withSession{ implicit session =>
           for{
             user <- userRepo.findByToken(request.token)
@@ -140,6 +140,33 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
           respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
         }{ response =>
           complete(response)
+        }
+      }
+    }
+  } ~
+  pathPrefix("link" / Segment){ code =>
+    path("clicks"){
+      get{
+        parameters(
+          'token,
+          'offset.as[Option[Int]],
+          'limit.as[Option[Int]]
+        ).as(PageRequest) { request: PageRequest =>
+          val result = db.withSession { implicit session =>
+            for {
+              user <- userRepo.findByToken(request.token)
+              clicks = clickRepo.findAllByOwnerAndCode(user.id.get, code, request.offset, request.limit)
+            } yield {
+              val clickDataSeq = clicks.map(click => ClickData(click.date.getMillis, click.referer, click.remoteIp))
+              ClickDataListResponse(clickDataSeq)
+            }
+          }
+
+          result.fold{
+            respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+          }{ response =>
+            complete(response)
+          }
         }
       }
     }
