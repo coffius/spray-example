@@ -118,6 +118,31 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
         }
       }
     }
+  } ~
+  path("link"){
+    get{
+      parameters(
+        'token,
+        'offset.as[Option[Int]],
+        'limit.as[Option[Int]]
+      ).as(LinkListDataRequest){ request: LinkListDataRequest =>
+        val result = db.withSession{ implicit session =>
+          for{
+            user <- userRepo.findByToken(request.token)
+            links = linkRepo.findAllByOwner(user.id.get, request.offset, request.limit)
+          } yield {
+            val linkDataSeq = links.map(link => LinkData(link.url, link.code))
+            LinkListDataResponse(linkDataSeq)
+          }
+        }
+
+        result.fold{
+          respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+        }{ response =>
+          complete(response)
+        }
+      }
+    }
   }
 
   private def generateCode = UUID.randomUUID().toString

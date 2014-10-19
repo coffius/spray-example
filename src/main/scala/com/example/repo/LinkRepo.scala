@@ -19,6 +19,17 @@ class LinkRepo extends EntityRepo[Link, Links]{
     query.firstOption
   }
 
+  def findAllByOwner(ownerId: Long, offset: Option[Int] = None,
+              limit: Option[Int] = None)(implicit session: Session): Seq[Link] = {
+    val query = for {
+      link <- table if link.ownerId === ownerId
+    } yield link
+
+    val withOffset = offset.fold(query)(query.drop)
+    val withLimit = limit.fold(withOffset)(withOffset.take)
+    withLimit.run
+  }
+
   def findByOwnerAndFolder(ownerId: Long,
                            folderId: Long,
                            offset: Option[Int] = None,
