@@ -18,29 +18,31 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
 {
   val route =
     pathPrefix("folder" / LongNumber){ folderId =>
-      parameters(
-        'token,
-        'offset.as[Option[Int]],
-        'limit.as[Option[Int]]
-      ).as(FolderLinkDataRequest){ request: FolderLinkDataRequest =>
-        val result = db.withSession{ implicit session =>
-          for{
-            user <- userRepo.findByToken(request.token)
-            folder <- folderRepo.findById(folderId)
-            links = linkRepo.findByOwnerAndFolder(user.id.get, folder.id.get, request.offset, request.offset)
-          } yield {
-            val linkDataSeq = links.map(link => LinkData(link.url, link.code))
-            FolderLinkDataResponse(linkDataSeq)
+      get{
+        parameters(
+          'token,
+          'offset.as[Option[Int]],
+          'limit.as[Option[Int]]
+        ).as(FolderLinkDataRequest){ request: FolderLinkDataRequest =>
+          val result = db.withSession{ implicit session =>
+            for{
+              user <- userRepo.findByToken(request.token)
+              folder <- folderRepo.findById(folderId)
+              links = linkRepo.findByOwnerAndFolder(user.id.get, folder.id.get, request.offset, request.offset)
+            } yield {
+              val linkDataSeq = links.map(link => LinkData(link.url, link.code))
+              FolderLinkDataResponse(linkDataSeq)
+            }
           }
-        }
 
-        result.fold{
-          respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
-        }{ response =>
-          complete(response)
-        }
+          result.fold{
+            respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+          }{ response =>
+            complete(response)
+          }
 
-        complete("")
+          complete("")
+        }
       }
     }
 }
