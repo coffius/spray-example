@@ -3,4 +3,4 @@ package com.example.model
 /**
  * Папка с ссылками
  */
-case class Folder(id: Long, title: String)
+case class Folder(id: Long, ownerId: Long, title: String)
