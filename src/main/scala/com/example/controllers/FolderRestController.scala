@@ -1,7 +1,7 @@
 package com.example.controllers
 
 import spray.routing.Directives
-import com.example.dto.{LinkData, FolderLinkDataResponse, FolderLinkDataRequest}
+import com.example.dto.{LinkData, LinkListDataResponse, LinkListDataRequest}
 import com.example.repo.{LinkRepo, FolderRepo, UserRepo}
 import spray.http.StatusCode
 import spray.httpx.SprayJsonSupport._
@@ -23,7 +23,7 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
           'token,
           'offset.as[Option[Int]],
           'limit.as[Option[Int]]
-        ).as(FolderLinkDataRequest){ request: FolderLinkDataRequest =>
+        ).as(LinkListDataRequest){ request: LinkListDataRequest =>
           val result = db.withSession{ implicit session =>
             for{
               user <- userRepo.findByToken(request.token)
@@ -31,7 +31,7 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
               links = linkRepo.findByOwnerAndFolder(user.id.get, folder.id.get, request.offset, request.offset)
             } yield {
               val linkDataSeq = links.map(link => LinkData(link.url, link.code))
-              FolderLinkDataResponse(linkDataSeq)
+              LinkListDataResponse(linkDataSeq)
             }
           }
 
