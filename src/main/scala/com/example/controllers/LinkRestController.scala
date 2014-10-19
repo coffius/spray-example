@@ -14,14 +14,17 @@ import spray.http.MediaTypes._
 import com.example.dto.CreateLinkRequest
 import com.example.dto.CreateLinkResponse
 import org.joda.time.DateTime
+import com.example.repo.{ClickRepo, LinkRepo, UserRepo}
 
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
  */
-class LinkRestController extends Directives with WithDb{
-  private val users = TableQuery[Users]
-  private val links = TableQuery[Links]
-  private val clicks = TableQuery[Clicks]
+class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
+                         private val linkRepo: LinkRepo = new LinkRepo(),
+                         private val clickRepo: ClickRepo = new ClickRepo())
+  extends Directives
+  with WithDb
+{
 
   val route =
     path("link") {
@@ -29,12 +32,9 @@ class LinkRestController extends Directives with WithDb{
         entity(as[CreateLinkRequest]){ request =>
           require(!request.url.trim.isEmpty, "url can`t be empty empty")
 
-          val findUserByTokenQuery = for{
-            u <- users if u.token === request.token
-          } yield u
-
           db.withSession{ implicit session =>
-            findUserByTokenQuery.firstOption.fold{
+            val userOpt = userRepo.findByToken(request.token)
+            userOpt.fold{
               respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
             }{ owner =>
               val newLink = Link(
@@ -44,7 +44,7 @@ class LinkRestController extends Directives with WithDb{
                 code = request.code.getOrElse(generateCode)
               )
 
-              links += newLink
+              linkRepo.save(newLink)
 
               respondWithMediaType(`application/json`) {
                 complete {
@@ -59,17 +59,17 @@ class LinkRestController extends Directives with WithDb{
   pathPrefix("link" / Segment){ code =>
     post {
       entity(as[PostLinkDataRequest]){request =>
-        val findLinkQuery = for{
-          link <- links if link.code === code
-        } yield link
 
         val foundLink = db.withSession{ implicit session =>
-          clicks += Click(
-            date = DateTime.now(),
-            referer = request.referer,
-            remoteIp = request.remoteIp
+          val linkOpt = linkRepo.findLinkByCode(code)
+          clickRepo.save(
+            Click(
+              date = DateTime.now(),
+              referer = request.referer,
+              remoteIp = request.remoteIp
+            )
           )
-          findLinkQuery.firstOption
+          linkOpt
         }
 
 

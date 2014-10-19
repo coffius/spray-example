@@ -11,4 +11,11 @@ import com.example.model.User
  */
 class UserRepo extends EntityRepo[User, Users]{
   override def table: TableQuery[Users] = TableQuery[Users]
+
+  def findByToken(token: String)(implicit session: Session): Option[User] = {
+    val findUserQuery = for{
+      u <- table if u.token === token
+    } yield u
+    findUserQuery.firstOption
+  }
 }
