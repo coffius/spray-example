@@ -62,13 +62,16 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
 
         val foundLink = db.withSession{ implicit session =>
           val linkOpt = linkRepo.findLinkByCode(code)
-          clickRepo.save(
-            Click(
-              date = DateTime.now(),
-              referer = request.referer,
-              remoteIp = request.remoteIp
+          linkOpt.foreach{ link =>
+            clickRepo.save(
+              Click(
+                linkId = link.id.get,
+                date = DateTime.now(),
+                referer = request.referer,
+                remoteIp = request.remoteIp
+              )
             )
-          )
+          }
           linkOpt
         }
 
@@ -78,6 +81,40 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
           respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
         }{ link =>
           complete { link.url }
+        }
+      }
+    }
+  } ~
+  pathPrefix("link" / Segment){ code =>
+    get {
+      parameters('token.as[String]){ token: String =>
+        val result = db.withSession{ implicit session =>
+          for{
+            user <- userRepo.findByToken(token)
+            link <- linkRepo.findLinkByCode(code)
+          } yield {
+            if(user.id.get != link.ownerId){
+              None
+            } else {
+              val count = clickRepo.countByLink(link.id.get)
+              Some(
+                GetLinkDataResponse(
+                  link = LinkData(
+                    link.url,
+                    link.code
+                  ),
+                  folderId = link.folderId,
+                  clickCount = count
+                )
+              )
+            }
+          }
+        }
+
+        result.fold{
+          respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+        }{ response =>
+          complete(response)
         }
       }
     }
