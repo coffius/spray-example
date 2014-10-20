@@ -35,7 +35,7 @@ class LinkRepo extends EntityRepo[Link, Links]{
                            offset: Option[Int] = None,
                            limit: Option[Int] = None)(implicit session: Session): Seq[Link] = {
     val query = for{
-      link <- table if link.ownerId === ownerId
+      link <- table if link.ownerId === ownerId && link.folderId === folderId
     } yield link
 
     val withOffset = offset.fold(query)(query.drop)

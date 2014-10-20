@@ -13,9 +13,6 @@ object JsonProtocol extends DefaultJsonProtocol{
   implicit val PostLinkDataRequestFormat = jsonFormat2(PostLinkDataRequest)
   implicit val LinkDataFormat = jsonFormat2(LinkData)
   implicit val GetLinkDateResponseFormat = jsonFormat3(GetLinkDataResponse)
-  implicit val FolderLinkDataResponseFormat = jsonFormat1(LinkListDataResponse)
   implicit val FolderDataFormat = jsonFormat2(FolderData)
-  implicit val FolderDataListResponseFormat = jsonFormat1(FolderDataListResponse)
   implicit val ClickDataFormat = jsonFormat3(ClickData)
-  implicit val ClickDataListResponseFormat = jsonFormat1(ClickDataListResponse)
 }

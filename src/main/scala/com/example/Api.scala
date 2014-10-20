@@ -4,7 +4,7 @@ import akka.actor.Actor
 import spray.routing._
 import spray.http._
 import MediaTypes._
-import com.example.controllers.{LinkRestController, UserRestController}
+import com.example.controllers.{FolderRestController, LinkRestController, UserRestController}
 
 class ApiActor extends Actor with Api{
   def actorRefFactory = context
@@ -14,6 +14,7 @@ class ApiActor extends Actor with Api{
 trait Api extends HttpService{
   val routes = {
     new UserRestController().route ~
-    new LinkRestController().route
+    new LinkRestController().route ~
+    new FolderRestController().route
   }
 }

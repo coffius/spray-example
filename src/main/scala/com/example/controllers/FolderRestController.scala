@@ -1,15 +1,13 @@
 package com.example.controllers
 
 import spray.routing.Directives
-import com.example.dto._
 import com.example.repo.{LinkRepo, FolderRepo, UserRepo}
 import spray.http.StatusCode
-import spray.httpx.SprayJsonSupport._
-import com.example.dto.JsonProtocol._
-import com.example.dto.LinkListDataResponse
 import com.example.dto.LinkData
 import com.example.dto.FolderData
 import com.example.dto.PageRequest
+import spray.httpx.SprayJsonSupport._
+import com.example.dto.JsonProtocol._
 
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
@@ -34,8 +32,7 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
               folder <- folderRepo.findById(folderId)
               links = linkRepo.findByOwnerAndFolder(user.id.get, folder.id.get, request.offset, request.offset)
             } yield {
-              val linkDataSeq = links.map(link => LinkData(link.url, link.code))
-              LinkListDataResponse(linkDataSeq)
+              links.map(link => LinkData(link.url, link.code))
             }
           }
 
@@ -44,8 +41,6 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
           }{ response =>
             complete(response)
           }
-
-          complete("")
         }
       }
     } ~
@@ -57,8 +52,7 @@ class FolderRestController(private val userRepo: UserRepo = new UserRepo,
             user <- userRepo.findByToken(token)
             folders = folderRepo.findByOwner(user.id.get)
           } yield {
-            val folderDataSeq = folders.map(folder => FolderData(folder.id.get, folder.title))
-            FolderDataListResponse(folderDataSeq)
+            folders.map(folder => FolderData(folder.id.get, folder.title))
           }
         }
 

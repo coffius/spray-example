@@ -131,8 +131,7 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
             user <- userRepo.findByToken(request.token)
             links = linkRepo.findAllByOwner(user.id.get, request.offset, request.limit)
           } yield {
-            val linkDataSeq = links.map(link => LinkData(link.url, link.code))
-            LinkListDataResponse(linkDataSeq)
+            links.map(link => LinkData(link.url, link.code))
           }
         }
 
@@ -157,8 +156,7 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
               user <- userRepo.findByToken(request.token)
               clicks = clickRepo.findAllByOwnerAndCode(user.id.get, code, request.offset, request.limit)
             } yield {
-              val clickDataSeq = clicks.map(click => ClickData(click.date.getMillis, click.referer, click.remoteIp))
-              ClickDataListResponse(clickDataSeq)
+              clicks.map(click => ClickData(click.date.getMillis, click.referer, click.remoteIp))
             }
           }
 
