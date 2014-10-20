@@ -9,9 +9,17 @@ trait WithDb {
 }
 
 object WithDb{
-  val db = Database.forURL(
-    url = "jdbc:postgresql://192.168.86.5:5432/spray-example",
-    driver = "org.postgresql.Driver",
-    user = "spray"
-  )
+  private val host = System.getProperty("db.host", "localhost")
+  private val port = System.getProperty("db.port", "5432")
+  private val name = System.getProperty("db.name", "spray-example")
+  private val url: String = s"jdbc:postgresql://$host:$port/$name"
+
+  val db = {
+
+    Database.forURL(
+      url = url,
+      driver = "org.postgresql.Driver",
+      user = "spray"
+    )
+  }
 }

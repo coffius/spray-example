@@ -26,4 +26,8 @@ libraryDependencies ++= {
   )
 }
 
+fork := true
+
+javaOptions := Seq("-Ddb.host=localhost", "-Ddb.port=5432", "-Ddb.name=spray-example")
+
 Revolver.settings
