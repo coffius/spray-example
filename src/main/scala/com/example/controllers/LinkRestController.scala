@@ -1,6 +1,8 @@
 package com.example.controllers
 
+import com.example.auth.BearerAuthenticator
 import spray.routing.Directives
+import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.driver.PostgresDriver.simple._
 import spray.httpx.SprayJsonSupport._
 import com.example.dto.JsonProtocol._
@@ -8,7 +10,7 @@ import com.example.dto._
 import scala.slick.lifted.TableQuery
 import com.example.dao.{Clicks, Links, Users}
 import spray.http.StatusCode
-import com.example.model.{Click, Link}
+import com.example.model.{User, Click, Link}
 import java.util.UUID
 import spray.http.MediaTypes._
 import com.example.dto.CreateLinkRequest
@@ -26,29 +28,41 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
   with WithDb
 {
 
+  private implicit val execContext = ExecutionContext.global
+
+  def auth(tokenOpt: Option[String]): Future[Option[User]] = {
+    Future.successful(tokenOpt.flatMap{
+      db.withSession { implicit session =>
+        userRepo.findByToken(_)(session)
+      }
+    })
+  }
+
   val route =
     path("link") {
       post {
-        entity(as[CreateLinkRequest]){ request =>
-          require(!request.url.trim.isEmpty, "url can`t be empty empty")
+        authenticate(BearerAuthenticator(auth)){ user =>
+          entity(as[CreateLinkRequest]){ request =>
+            require(!request.url.trim.isEmpty, "url can`t be empty empty")
 
-          db.withSession{ implicit session =>
-            val userOpt = userRepo.findByToken(request.token)
-            userOpt.fold{
-              respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
-            }{ owner =>
-              val newLink = Link(
-                ownerId = owner.id.get,
-                folderId = request.folderId,
-                url = request.url,
-                code = request.code.getOrElse(generateCode)
-              )
+            db.withSession{ implicit session =>
+              val userOpt = userRepo.findByToken(request.token)
+              userOpt.fold{
+                respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
+              }{ owner =>
+                val newLink = Link(
+                  ownerId = owner.id.get,
+                  folderId = request.folderId,
+                  url = request.url,
+                  code = request.code.getOrElse(generateCode)
+                )
 
-              linkRepo.save(newLink)
+                linkRepo.save(newLink)
 
-              respondWithMediaType(`application/json`) {
-                complete {
-                  CreateLinkResponse(newLink.url, newLink.code)
+                respondWithMediaType(`application/json`) {
+                  complete {
+                    CreateLinkResponse(newLink.url, newLink.code)
+                  }
                 }
               }
             }
