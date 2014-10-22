@@ -8,7 +8,7 @@ import spray.json.DefaultJsonProtocol
 object JsonProtocol extends DefaultJsonProtocol{
   implicit val TokenRequestFormat = jsonFormat2(TokenRequest)
   implicit val TokenResponseFormat = jsonFormat1(TokenResponse)
-  implicit val CreateLinkRequestFormat = jsonFormat4(CreateLinkRequest)
+  implicit val CreateLinkRequestFormat = jsonFormat3(CreateLinkRequest)
   implicit val CreateLinkResponseFormat = jsonFormat2(CreateLinkResponse)
   implicit val PostLinkDataRequestFormat = jsonFormat2(PostLinkDataRequest)
   implicit val LinkDataFormat = jsonFormat2(LinkData)

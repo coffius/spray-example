@@ -21,48 +21,36 @@ import com.example.repo.{ClickRepo, LinkRepo, UserRepo}
 /**
  * @author coffius@gmail.com (Aleksei Shamenev)
  */
-class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
+class LinkRestController(val userRepo: UserRepo = new UserRepo(),
                          private val linkRepo: LinkRepo = new LinkRepo(),
                          private val clickRepo: ClickRepo = new ClickRepo())
   extends Directives
+  with WithAuth
   with WithDb
 {
 
   private implicit val execContext = ExecutionContext.global
 
-  def auth(tokenOpt: Option[String]): Future[Option[User]] = {
-    Future.successful(tokenOpt.flatMap{
-      db.withSession { implicit session =>
-        userRepo.findByToken(_)(session)
-      }
-    })
-  }
-
   val route =
     path("link") {
       post {
-        authenticate(BearerAuthenticator(auth)){ user =>
+        authenticate(BearerAuthenticator(auth)){ owner =>
           entity(as[CreateLinkRequest]){ request =>
             require(!request.url.trim.isEmpty, "url can`t be empty empty")
 
             db.withSession{ implicit session =>
-              val userOpt = userRepo.findByToken(request.token)
-              userOpt.fold{
-                respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
-              }{ owner =>
-                val newLink = Link(
-                  ownerId = owner.id.get,
-                  folderId = request.folderId,
-                  url = request.url,
-                  code = request.code.getOrElse(generateCode)
-                )
+              val newLink = Link(
+                ownerId = owner.id.get,
+                folderId = request.folderId,
+                url = request.url,
+                code = request.code.getOrElse(generateCode)
+              )
 
-                linkRepo.save(newLink)
+              linkRepo.save(newLink)
 
-                respondWithMediaType(`application/json`) {
-                  complete {
-                    CreateLinkResponse(newLink.url, newLink.code)
-                  }
+              respondWithMediaType(`application/json`) {
+                complete {
+                  CreateLinkResponse(newLink.url, newLink.code)
                 }
               }
             }
@@ -101,13 +89,12 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
   } ~
   pathPrefix("link" / Segment){ code =>
     get {
-      parameters('token.as[String]){ token: String =>
+      authenticate(BearerAuthenticator(auth)){ owner =>
         val result = db.withSession{ implicit session =>
           for{
-            user <- userRepo.findByToken(token)
             link <- linkRepo.findLinkByCode(code)
           } yield {
-            if(user.id.get != link.ownerId){
+            if(owner.id.get != link.ownerId){
               None
             } else {
               val count = clickRepo.countByLink(link.id.get)
@@ -135,49 +122,37 @@ class LinkRestController(private val userRepo: UserRepo = new UserRepo(),
   } ~
   path("link"){
     get{
-      parameters(
-        'token,
-        'offset.as[Option[Int]],
-        'limit.as[Option[Int]]
-      ).as(PageRequest){ request: PageRequest =>
-        val result = db.withSession{ implicit session =>
-          for{
-            user <- userRepo.findByToken(request.token)
-            links = linkRepo.findAllByOwner(user.id.get, request.offset, request.limit)
-          } yield {
-            links.map(link => LinkData(link.url, link.code))
+      authenticate(BearerAuthenticator(auth)){ user =>
+        parameters(
+          'offset.as[Option[Int]],
+          'limit.as[Option[Int]]
+        ).as(PageRequest){ request: PageRequest =>
+          val result = db.withSession{ implicit session =>
+              linkRepo
+                .findAllByOwner(user.id.get, request.offset, request.limit)
+                .map(link => LinkData(link.url, link.code))
           }
-        }
 
-        result.fold{
-          respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
-        }{ response =>
-          complete(response)
+          complete(result)
         }
       }
     }
   } ~
   pathPrefix("link" / Segment){ code =>
     path("clicks"){
-      get{
-        parameters(
-          'token,
-          'offset.as[Option[Int]],
-          'limit.as[Option[Int]]
-        ).as(PageRequest) { request: PageRequest =>
-          val result = db.withSession { implicit session =>
-            for {
-              user <- userRepo.findByToken(request.token)
-              clicks = clickRepo.findAllByOwnerAndCode(user.id.get, code, request.offset, request.limit)
-            } yield {
-              clicks.map(click => ClickData(click.date.getMillis, click.referer, click.remoteIp))
+      authenticate(BearerAuthenticator(auth)){ user =>
+        get{
+          parameters(
+            'offset.as[Option[Int]],
+            'limit.as[Option[Int]]
+          ).as(PageRequest) { request: PageRequest =>
+            val result = db.withSession { implicit session =>
+                clickRepo
+                  .findAllByOwnerAndCode(user.id.get, code, request.offset, request.limit)
+                  .map(click => ClickData(click.date.getMillis, click.referer, click.remoteIp))
             }
-          }
 
-          result.fold{
-            respondWithStatus(StatusCode.int2StatusCode(404)){ complete{ "" } }
-          }{ response =>
-            complete(response)
+            complete(result)
           }
         }
       }
