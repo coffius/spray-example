@@ -62,5 +62,10 @@ class FolderRestController(val userRepo: UserRepo = new UserRepo,
         complete(result)
       }
     }
+  } ~
+  path("folder"){
+    post{
+      complete(StatusCodes.NotImplemented)
+    }
   }
 }
